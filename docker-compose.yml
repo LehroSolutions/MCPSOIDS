@@ -1,0 +1,30 @@
+services:
+  mcp-server:
+    build: 
+      context: ./mcp_server_ref
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - HOST=0.0.0.0
+      - MCP_ENABLE_FS=true
+      - MCP_ALLOWED_ORIGIN=http://localhost:3001
+      # Mount a volume for FS tools to access safely
+    volumes:
+      - ./mcp_data:/data
+    command: ["node", "bin/mcp-server-ref.js", "--host", "0.0.0.0", "--enable-fs", "--root", "/data"]
+    restart: unless-stopped
+
+  mcp-control-center:
+    build:
+      context: ./mcp-control-center
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3000"
+    environment:
+      - NEXT_PUBLIC_MCP_SERVER_URL=http://localhost:3000
+    depends_on:
+      - mcp-server
+    restart: unless-stopped

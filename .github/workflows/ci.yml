@@ -1,0 +1,81 @@
+name: CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+
+jobs:
+  server:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: mcp_server_ref/package-lock.json
+
+      - name: Install
+        working-directory: mcp_server_ref
+        run: npm ci
+
+      - name: Lint
+        working-directory: mcp_server_ref
+        run: npm run lint
+
+      - name: Build
+        working-directory: mcp_server_ref
+        run: npm run build
+
+      - name: Start server
+        working-directory: mcp_server_ref
+        run: |
+          node bin/mcp-server-ref.js --host 127.0.0.1 --port 3000 --enable-fs --root . &
+          echo $! > server.pid
+
+      - name: Wait for health
+        run: |
+          for i in {1..40}; do
+            if curl -sf http://127.0.0.1:3000/.well-known/mcp-health > /dev/null; then
+              exit 0
+            fi
+            sleep 0.25
+          done
+          echo "Server did not become healthy in time"
+          exit 1
+
+      - name: Inspector
+        working-directory: mcp_server_ref
+        run: npm run inspector
+
+      - name: Stop server
+        if: always()
+        working-directory: mcp_server_ref
+        run: |
+          kill $(cat server.pid) || true
+
+  control-center:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: mcp-control-center/package-lock.json
+
+      - name: Install
+        working-directory: mcp-control-center
+        run: npm ci
+
+      - name: Build
+        working-directory: mcp-control-center
+        run: npm run build
+
+      - name: Install Playwright
+        working-directory: mcp-control-center
+        run: npx playwright install --with-deps chromium
+

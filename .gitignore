@@ -1,0 +1,33 @@
+**/node_modules/
+
+**/dist/
+**/.next/
+**/out/
+**/build/
+
+**/coverage/
+
+**/.env*
+
+**/*.log
+
+**/.DS_Store
+
+**/.vscode/
+**/.idea/
+
+**/*.tsbuildinfo
+
+# Internal Documentation & Rules (Excluded from Repo)
+gemini-king-mode.md
+improved_dev_rules.md
+critique_and_pivot.md
+copilot-instructions.md
+unified_dev_rules.md
+
+# Research Data
+mcp_research_2025/
+
+# System Artifacts
+.agent/
+.gemini/
