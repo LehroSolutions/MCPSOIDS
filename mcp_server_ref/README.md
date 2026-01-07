@@ -1,7 +1,7 @@
-# Reference MCP Server (Active Robustness Implementation)
+# MCPSOIDS Server (Active Robustness Implementation)
 
 ## Overview
-This is the "Gold Standard" reference implementation of the Model Context Protocol (2025 Edition). It is built to strictly adhere to the [Active Robustness Guidelines](../.docs/03_compliance_driven_dev.md).
+This is the core server for **MCPSOIDS**, the "Gold Standard" reference implementation of the Model Context Protocol (2025 Edition).
 
 ## Features Implemented
 1.  **Transport**: Streamable HTTP (Express) on Port 3000.

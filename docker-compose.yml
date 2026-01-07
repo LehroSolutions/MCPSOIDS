@@ -1,5 +1,5 @@
 services:
-  mcp-server:
+  mcpsoids-server:
     build: 
       context: ./mcp_server_ref
       dockerfile: Dockerfile
@@ -17,7 +17,7 @@ services:
     command: ["node", "bin/mcp-server-ref.js", "--host", "0.0.0.0", "--enable-fs", "--root", "/data"]
     restart: unless-stopped
 
-  mcp-control-center:
+  mcpsoids-ui:
     build:
       context: ./mcp-control-center
       dockerfile: Dockerfile
@@ -26,5 +26,5 @@ services:
     environment:
       - NEXT_PUBLIC_MCP_SERVER_URL=http://localhost:3000
     depends_on:
-      - mcp-server
+      - mcpsoids-server
     restart: unless-stopped

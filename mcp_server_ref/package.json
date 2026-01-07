@@ -1,7 +1,7 @@
 {
-  "name": "mcp-server-ref",
+  "name": "mcpsoids-server",
   "version": "1.0.0",
-  "description": "Reference Implementation of an MCP Server with Active Robustness",
+  "description": "MCPSOIDS Server - Optimized Reference Implementation of the Model Context Protocol",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "files": [
