@@ -32,13 +32,13 @@ jobs:
       - name: Start server
         working-directory: mcp_server_ref
         run: |
-          node bin/mcp-server-ref.js --host 127.0.0.1 --port 3000 --enable-fs --root . &
+          MCP_AUTH_TOKEN=ci-token MCP_AUDIT_LOG_PATH=data/audit/ci-audit.jsonl node bin/mcp-server-ref.js --host 127.0.0.1 --port 3000 --enable-fs --root . &
           echo $! > server.pid
 
       - name: Wait for health
         run: |
           for i in {1..40}; do
-            if curl -sf http://127.0.0.1:3000/.well-known/mcp-health > /dev/null; then
+            if curl -sf -H "Authorization: Bearer ci-token" http://127.0.0.1:3000/.well-known/mcp-health > /dev/null; then
               exit 0
             fi
             sleep 0.25
@@ -48,6 +48,8 @@ jobs:
 
       - name: Inspector
         working-directory: mcp_server_ref
+        env:
+          MCP_AUTH_TOKEN: ci-token
         run: npm run inspector
 
       - name: Stop server
@@ -71,11 +73,27 @@ jobs:
         working-directory: mcp-control-center
         run: npm ci
 
+      - name: Install server dependencies for E2E
+        working-directory: mcp_server_ref
+        run: npm ci
+
+      - name: Lint
+        working-directory: mcp-control-center
+        run: npm run lint
+
       - name: Build
         working-directory: mcp-control-center
+        env:
+          MCP_SERVER_URL: http://127.0.0.1:3000
+          MCPSOIDS_UI_SECRET: ci-ui-secret
+          MCPSOIDS_ADMIN_TOKEN: ci-admin-token
         run: npm run build
 
       - name: Install Playwright
         working-directory: mcp-control-center
         run: npx playwright install --with-deps chromium
+
+      - name: E2E
+        working-directory: mcp-control-center
+        run: npm run test:e2e
 

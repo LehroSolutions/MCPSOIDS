@@ -48,17 +48,23 @@ This will:
 **Option B: Manual Startup**
 
 **Terminal 1 (Backend):**
-```bash
+```powershell
 cd mcp_server_ref
 npm run build
-# Start with File System access enabled
-node bin/mcp-server-ref.js --enable-fs --cors-allow-all
+$env:MCP_AUTH_TOKEN = "local-mcp-token"
+$env:MCP_AUDIT_LOG_PATH = "..\mcp_data\audit\audit-log.jsonl"
+node bin/mcp-server-ref.js --enable-fs --cors-origin http://localhost:3001
 ```
 
 **Terminal 2 (Frontend):**
-```bash
+```powershell
 cd mcp-control-center
 npm run build
+$env:MCP_SERVER_URL = "http://127.0.0.1:3000"
+$env:MCP_AUTH_TOKEN = "local-mcp-token"
+$env:MCPSOIDS_ADMIN_TOKEN = "local-admin-token"
+$env:MCPSOIDS_UI_SECRET = "local-ui-secret"
+$env:MCPSOIDS_ALLOW_PRIVATE_MCP = "true"
 npm start -- -p 3001
 ```
 
@@ -71,19 +77,15 @@ Navigate to `http://localhost:3001` in your browser.
 
 *   **Health Status**: The top "Health" panel polls the server every few seconds. Valid statuses include `healthy` (green), `degraded` (yellow), or `unhealthy` (red).
 *   **Active Tools**: The tool catalog displays available MCP tools.
-    *   **File System Tools**: `read_file`, `write_file`, `list_directory`, etc.
-    *   **System Tools**: `memory_usage`, `ping`.
+    *   **File System Tools**: `fs/ls`, `fs/read_file`.
+    *   **Compliance Tool**: `__echo`.
+*   **Audit Trail**: Tool calls are recorded as hashed append-only entries. Raw arguments and raw outputs are not stored.
+*   **Operator Session**: In production, enter `MCPSOIDS_ADMIN_TOKEN` in the Operator Session panel before executing tools.
 
 ### Executing Tools
-1.  Click on any tool card (e.g., `list_directory`).
-2.  A modal will appear requesting strict JSON arguments.
-3.  **Example for `list_directory`**:
-    ```json
-    {
-      "path": "C:/Users/YourName/Documents"
-    }
-    ```
-4.  Click **Execute**. The output (or error) will appear in the result window.
+1.  Click **Interactive Run** on any tool card.
+2.  Fill the generated argument fields. Required fields are validated before the request is sent.
+3.  Click **Run Tool**. The output or error appears in the result window, and the audit panel updates with a hashed record.
 
 ---
 
@@ -92,15 +94,24 @@ Navigate to `http://localhost:3001` in your browser.
 ### Environment Variables
 
 **Frontend (`mcp-control-center/.env.local` or environment)**
-*   `NEXT_PUBLIC_MCP_SERVER_URL`: URL of the backend server (default: `http://localhost:3000`).
+*   `MCP_SERVER_URL`: Server-side URL of the backend MCP server.
+*   `MCP_AUTH_TOKEN`: Backend bearer token used only by the Next.js gateway.
+*   `MCPSOIDS_ADMIN_TOKEN`: Operator token used to create a signed admin session in production.
+*   `MCPSOIDS_UI_SECRET`: HMAC secret for signed UI cookies.
+*   `MCPSOIDS_ALLOW_PRIVATE_MCP`: Set to `true` for local production launches that target `127.0.0.1`.
 
 **Backend (`mcp_server_ref/.env`)**
 *   `PORT`: Server port (default: `3000`).
 *   `MCP_ENABLE_FS`: Set to `true` to enable file system tools.
+*   `MCP_AUTH_TOKEN`: If set, requires `Authorization: Bearer <token>` on backend endpoints.
+*   `MCP_AUDIT_LOG_PATH`: Append-only JSONL audit log location.
+*   `MCP_POLICY_ALLOW_TOOLS` / `MCP_POLICY_DENY_TOOLS`: Comma-separated glob patterns for OSS tool policy.
+*   `MCP_POLICY_MODE`: `enforce` or `dry-run`.
 
 ### Security Notes
 *   **Production Safety**: This reference implementation enables file system access (`--enable-fs`). In a public production environment, ensure strict containerization (Docker) or disable FS access to prevent vulnerabilities.
 *   **Rate Limiting**: The server includes basic rate limiting to prevent abuse.
+*   **Same-Origin Gateway**: Browser code calls `/api/mcp/*`; backend URLs and bearer tokens are not exposed to the client bundle.
 
 ---
 

@@ -28,6 +28,18 @@ unified_dev_rules.md
 # Research Data
 mcp_research_2025/
 
+# Runtime Data
+mcp_server_ref/data/audit/
+mcp_data/audit/
+.mcpsoids-private/
+
+# Generated Test Artifacts
+**/playwright-report/
+**/test-results/
+
+# PRO/private docs should not publish from the OSS repo.
+.docs/PRO_IMPLEMENTATION.md
+
 # System Artifacts
 .agent/
 .gemini/

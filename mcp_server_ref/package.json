@@ -13,7 +13,7 @@
   },
   "scripts": {
     "dev": "ts-node src/cli.ts",
-    "start": "ts-node src/cli.ts --enable-fs --cors-allow-all",
+    "start": "ts-node src/cli.ts --enable-fs --cors-origin http://localhost:3001",
     "build": "tsc",
     "lint": "eslint src/**/*.ts",
     "inspector": "ts-node scripts/inspector.ts",

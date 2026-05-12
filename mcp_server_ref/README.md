@@ -28,9 +28,13 @@ Environment configuration (optional):
 | MCP_ENABLE_FS | `true` to enable fs tools without flags | false |
 | MCP_ALLOWED_ORIGIN | Single CORS origin (omit to disable CORS) | none |
 | MCP_AUTH_TOKEN | If set, requires `Authorization: Bearer <token>` on all endpoints | unset |
+| MCP_AUDIT_LOG_PATH | Append-only JSONL audit log path | `data/audit/audit-log.jsonl` |
+| MCP_POLICY_ALLOW_TOOLS | Comma-separated tool allow glob patterns | `*` |
+| MCP_POLICY_DENY_TOOLS | Comma-separated tool deny glob patterns | unset |
+| MCP_POLICY_MODE | `enforce` or `dry-run` | `enforce` |
 | MCP_TOOL_TIMEOUT_MS | Tool call timeout | 30000 |
 | MCP_MAX_ACTIVE_REQUESTS | Concurrent request budget before 429 | 50 |
-| MCP_JSON_BODY_LIMIT | Express JSON body size limit | 256kb |
+| MCP_JSON_BODY_LIMIT | Express JSON body size limit | 2mb |
 
 ## How to Verify (Compliance Agent)
 Run the automated inspector to certify the server:

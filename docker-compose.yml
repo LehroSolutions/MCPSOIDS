@@ -11,10 +11,12 @@ services:
       - HOST=0.0.0.0
       - MCP_ENABLE_FS=true
       - MCP_ALLOWED_ORIGIN=http://localhost:3001
+      - MCP_AUTH_TOKEN=${MCP_AUTH_TOKEN:-change-me-mcp-token}
+      - MCP_AUDIT_LOG_PATH=/data/audit/audit-log.jsonl
       # Mount a volume for FS tools to access safely
     volumes:
       - ./mcp_data:/data
-    command: ["node", "bin/mcp-server-ref.js", "--host", "0.0.0.0", "--enable-fs", "--root", "/data"]
+    command: ["node", "bin/mcp-server-ref.js", "--host", "0.0.0.0", "--enable-fs", "--root", "/data", "--cors-origin", "http://localhost:3001"]
     restart: unless-stopped
 
   mcpsoids-ui:
@@ -24,7 +26,10 @@ services:
     ports:
       - "3001:3000"
     environment:
-      - NEXT_PUBLIC_MCP_SERVER_URL=http://localhost:3000
+      - MCP_SERVER_URL=http://mcpsoids-server:3000
+      - MCP_AUTH_TOKEN=${MCP_AUTH_TOKEN:-change-me-mcp-token}
+      - MCPSOIDS_ADMIN_TOKEN=${MCPSOIDS_ADMIN_TOKEN:-change-me-admin-token}
+      - MCPSOIDS_UI_SECRET=${MCPSOIDS_UI_SECRET:-change-me-ui-secret}
     depends_on:
       - mcpsoids-server
     restart: unless-stopped

@@ -54,7 +54,8 @@ This will automatically:
 cd mcp_server_ref
 npm install
 npm run build
-node bin/mcp-server-ref.js --enable-fs --cors-allow-all
+$env:MCP_AUTH_TOKEN = "local-mcp-token"
+node bin/mcp-server-ref.js --enable-fs --cors-origin http://localhost:3001
 ```
 
 **2. The Control Center**
@@ -62,6 +63,11 @@ node bin/mcp-server-ref.js --enable-fs --cors-allow-all
 cd mcp-control-center
 npm install
 npm run build
+$env:MCP_SERVER_URL = "http://127.0.0.1:3000"
+$env:MCP_AUTH_TOKEN = "local-mcp-token"
+$env:MCPSOIDS_ADMIN_TOKEN = "local-admin-token"
+$env:MCPSOIDS_UI_SECRET = "local-ui-secret"
+$env:MCPSOIDS_ALLOW_PRIVATE_MCP = "true"
 npm start -- -p 3001
 ```
 

@@ -13,6 +13,11 @@ const envSchema = z.object({
     MCP_AUTH_TOKEN: z.string().optional(),
     MCP_JSON_BODY_LIMIT: z.string().default('2mb'),
     MCP_ENABLE_DEBUG_TOOLS: z.enum(['true', 'false']).transform(v => v === 'true').default('false'),
+    MCP_POLICY_MODE: z.enum(['enforce', 'dry-run']).default('enforce'),
+    MCP_POLICY_ALLOW_TOOLS: z.string().optional(),
+    MCP_POLICY_DENY_TOOLS: z.string().optional(),
+    MCP_AUDIT_LOG_PATH: z.string().optional(),
+    MCP_AUDIT_MAX_READ_ENTRIES: z.string().transform(Number).default('200'),
 });
 
 export const config = envSchema.parse(process.env);

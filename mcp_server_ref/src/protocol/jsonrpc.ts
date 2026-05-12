@@ -8,6 +8,7 @@ export enum JsonRpcErrorCode {
     InternalError = -32603,
     // Custom Server Errors
     Timeout = -32000,
+    PolicyDenied = -32001,
 }
 
 export const JsonRpcRequestSchema = z.object({
