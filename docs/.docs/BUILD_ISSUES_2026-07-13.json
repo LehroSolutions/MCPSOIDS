@@ -1,0 +1,52 @@
+{
+  "schemaVersion": "1.0",
+  "slug": "BUILD_ISSUES_2026-07-13",
+  "title": "Build Issues \u2014 2026-07-13",
+  "status": "current",
+  "audience": [
+    "Maintainers",
+    "Release engineers"
+  ],
+  "useWhen": "Reviewing the Bun workspace filter CI failure and remediation.",
+  "sourceOfTruth": "BUILD_ISSUES_2026-07-13.md",
+  "counterparts": {
+    "markdown": "BUILD_ISSUES_2026-07-13.md",
+    "html": "BUILD_ISSUES_2026-07-13.html",
+    "json": "BUILD_ISSUES_2026-07-13.json"
+  },
+  "summary": "Records the MCPSOIDS Bun workspace filter failure and direct-directory script remediation.",
+  "sections": [
+    {
+      "id": "failure",
+      "label": "Failure"
+    },
+    {
+      "id": "resolution",
+      "label": "Resolution"
+    },
+    {
+      "id": "verification",
+      "label": "Verification"
+    },
+    {
+      "id": "related-guides",
+      "label": "Related guides"
+    }
+  ],
+  "relatedGuides": [
+    "../current/quality",
+    "../current/evidence-log"
+  ],
+  "keywords": [
+    "bun",
+    "workspace",
+    "format",
+    "ci"
+  ],
+  "lastReviewed": "2026-07-13",
+  "sourceChecksum": "f4ad637f008d023d4892b46aee1d77952f81ce9bbd8ed4aa9b0bae8c0c096939",
+  "generatedAt": "2026-07-13T16:43:31.660592+00:00",
+  "validation": {
+    "state": "verified"
+  }
+}

@@ -52,6 +52,6 @@ __pycache__/
 # Bun is the canonical package manager and lockfile authority
 package-lock.json
 
-#videos
-MCPSOIDVIDEO 
-mcpsoidsvideo
+#video folder
+mcpsoidsvideo 
+MCPSOIDVIDEO

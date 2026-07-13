@@ -11,16 +11,16 @@
     "bun": ">=1.3.14"
   },
   "scripts": {
-    "dev": "bun run --filter mcpsoids-server dev",
-    "start": "bun run --filter mcpsoids-server start",
-    "build": "bun run --filter mcpsoids-server build",
-    "lint": "bun run --filter mcpsoids-server lint",
+    "dev": "cd mcp_server_ref && bun run dev",
+    "start": "cd mcp_server_ref && bun run start",
+    "build": "cd mcp_server_ref && bun run build",
+    "lint": "cd mcp_server_ref && bun run lint",
     "install:js": "bun install",
     "package:manager": "bun --version",
     "docs:build": "node scripts/docs.mjs build",
     "docs:check": "node scripts/docs.mjs check",
-    "format": "bun --filter mcpsoids-server run format",
-    "format:check": "bun --filter mcpsoids-server run format:check"
+    "format": "cd mcp_server_ref && bun run format",
+    "format:check": "cd mcp_server_ref && bun run format:check"
   },
   "workspaces": [
     "mcp_server_ref"
