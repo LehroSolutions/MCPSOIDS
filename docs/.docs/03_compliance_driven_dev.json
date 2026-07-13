@@ -1,0 +1,14 @@
+{
+  "product": "MCPSOIDS",
+  "title": "03 Compliance Driven Dev",
+  "group": "Project",
+  "path": ".docs/03_compliance_driven_dev.md",
+  "lead": "We do not write code for \"Users\". We write code to satisfy the Compliance Agent. If the Agent is happy, the User is safe.",
+  "content_markdown": "# Compliance-Driven Development (CDD)\n\n## 1. The Paradigm Shift\nWe do not write code for \"Users\". We write code to satisfy the **Compliance Agent**. If the Agent is happy, the User is safe.\n\n## 2. The Inspector Specification\nThe **MCP Inspector** is an automated test harness. Your server is not \"Done\" until it passes the Inspector's aggressive audit.\n\n### A. The \"Proof of Robustness\" Protocol\nThe Inspector will call your server with the following \"Stress\" patterns. Your server must handle them without crashing.\n\n| Test Case | Payload | Expected Outcome |\n| :--- | :--- | :--- |\n| **Fuzz Attack** | `tool_call(\"random_bytes_1MB\")` | `Error: -32600 (Invalid Request)` |\n| **Timeout Check** | `wait(ms=30000)` | `Error: -32000 (Timeout)` (Clean exit, no zombie process) |\n| **Concurrency** | 50 parallel requests | All return 200 OK or 429 Too Many Requests |\n\n### B. The \"Echo\" Tool Requirement\nEvery MCP Server MUST implement a hidden `__echo` tool for debugging/latency testing.\n```typescript\n{\n  \"name\": \"__echo\",\n  \"description\": \"Internal diagnostic tool. Returns the input.\",\n  \"inputSchema\": { \"type\": \"string\" }\n}\n```\n\n## 3. The \"Red Flag\" Self-Check\nBefore pushing, run the `governance_agent` (see `06_automated_governance.md`). It scans for:\n*   [ ] **Hardcoded Secrets**: Regex `(sk-[a-zA-Z0-9]{20,})`\n*   [ ] **Unbounded Reads**: `fs.readFile()` without `stream`\n*   [ ] **Global State**: Variables declared outside request handlers.\n",
+  "layout": "quantumide-ultra-link",
+  "theme": {
+    "mode": "dark",
+    "accent": "#49d6c8",
+    "css": "design-system.css"
+  }
+}

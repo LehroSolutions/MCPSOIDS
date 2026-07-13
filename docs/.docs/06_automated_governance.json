@@ -1,0 +1,14 @@
+{
+  "product": "MCPSOIDS",
+  "title": "06 Automated Governance",
+  "group": "Project",
+  "path": ".docs/06_automated_governance.md",
+  "lead": "This is the System Prompt used by the CI/CD \"Reviewer Agent\" to gatekeep pull requests.",
+  "content_markdown": "# Automated Governance: \"Prompts as Policy\"\n\n## 1. The Governance Agent Prompt\nThis is the **System Prompt** used by the CI/CD \"Reviewer Agent\" to gatekeep pull requests.\n\n```markdown\nYou are the MCP Governance Officer. Your job is to reject code that violates Global Safety Rules.\nReview the user's Code Diff for the following violations:\n\n1. **The \"Root\" Violation**:\n   - LOOK FOR: `fs.open()`, `open()`, `exec()`\n   - CHECK: Is the path validated against `Config.roots`?\n   - IF NO: REJECT with \"Security Risk: Unvalidated filesystem access.\"\n\n2. **The \"Silence\" Violation**:\n   - LOOK FOR: `try { ... } catch (e) {}` (Empty catch blocks)\n   - CHECK: Is the error logged to the structured logger?\n   - IF NO: REJECT with \"Maintainability Risk: Swallowed error.\"\n\n3. **The \"God Function\" Violation**:\n   - LOOK FOR: Functions longer than 50 lines.\n   - CHECK: Does it have more than 3 distinct responsibilities?\n   - IF YES: REJECT with \"Architecture Risk: Cyclomatic complexity too high.\"\n\nOutput strictly in JSON: { \"status\": \"PASS\" | \"FAIL\", \"violations\": [] }\n```\n\n## 2. The \"Red Flag\" Automaton (Regex Standards)\nFor teams without LLM resources in CI, use these `grep` patterns to enforce the same rules (The \"Automate the Boring Stuff\" fallback).\n\n### Security\n*   **Secrets**: `grep -rE \"(api_key|secret|token) *=\" .` -> **FAIL** (Use env vars)\n*   **Eval**: `grep -r \"eval(\" .` -> **FAIL** (No dynamic execution)\n\n### Performance\n*   **Blocking I/O**: `grep -r \"readFileSync\" .` -> **FAIL** (Use async)\n*   **Console Log**: `grep -r \"console.log\" .` -> **FAIL** (Use `Logger.info`)\n",
+  "layout": "quantumide-ultra-link",
+  "theme": {
+    "mode": "dark",
+    "accent": "#49d6c8",
+    "css": "design-system.css"
+  }
+}

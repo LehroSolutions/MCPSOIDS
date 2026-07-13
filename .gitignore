@@ -44,3 +44,14 @@ mcp_data/audit/
 # System Artifacts
 .agent/
 .gemini/
+.env.*
+!.env.example
+.venv/
+__pycache__/
+
+# Bun is the canonical package manager and lockfile authority
+package-lock.json
+
+#videos
+MCPSOIDVIDEO 
+mcpsoidsvideo

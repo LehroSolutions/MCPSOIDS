@@ -1,0 +1,14 @@
+{
+  "product": "MCPSOIDS",
+  "title": "Upgrade Completion 2026 07 10",
+  "group": "Project",
+  "path": ".docs/UPGRADE_COMPLETION_2026-07-10.md",
+  "lead": "npm run build in mcpserverref after dependency restore.",
+  "content_markdown": "# 2026 Upgrade Completion\n\n## Outcome\n\n- Phase 3 control center with live health, capability catalog, Roots lab.\n- Security headers + constant-time bearer verification.\n- Reduced-motion / keyboard accessible operator shell.\n\n## Verification gates\n\n`npm run build` in `mcp_server_ref` after dependency restore.\n",
+  "layout": "quantumide-ultra-link",
+  "theme": {
+    "mode": "dark",
+    "accent": "#49d6c8",
+    "css": "design-system.css"
+  }
+}

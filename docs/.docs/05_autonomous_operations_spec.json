@@ -1,0 +1,14 @@
+{
+  "product": "MCPSOIDS",
+  "title": "05 Autonomous Operations Spec",
+  "group": "Project",
+  "path": ".docs/05_autonomous_operations_spec.md",
+  "lead": "In production, every MCP Server is paired with a lightweight \"Janitor\" process. This is the Active Robustness layer.",
+  "content_markdown": "# Autonomous Operations Specification\n\n## 1. The \"Janitor Agent\" Sidecar\nIn production, every MCP Server is paired with a lightweight \"Janitor\" process. This is the **Active Robustness** layer.\n\n### Responsibilities\n1.  **Watchdog**: Polls `/.well-known/mcp-health` every 5 seconds.\n2.  **Reaper**: If `memory_usage_mb > budget.max_memory_mb` (from `nfr_budget.json`), it sends `SIGTERM` to the server.\n3.  **Reporter**: Pushes crash logs to the central \"Observability Trace\" before the pod dies.\n\n## 2. The Signal Protocol\nServers must communicate their distress *before* they crash. We use standard JSON-RPC Notifications for this.\n\n### `system.overload`\nSent when the internal queue is > 80% full.\n```json\n{\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"notifications/system.overload\",\n  \"params\": {\n    \"level\": \"critical\",\n    \"backoff_ms\": 5000,\n    \"reason\": \"db_connection_pool_exhausted\"\n  }\n}\n```\n**Client Behavior**: Upon receipt, the Client (Orchestrator) MUST stop sending new requests for `backoff_ms` and route traffic to a replica.\n\n## 3. Maintenance Windows\nServers can request a \"Graceful Exit\" via `system.maintenance`.\n*   *Use Case*: Updating local vector indices or clearing temp caches.\n*   *Protocol*: Server sends `system.maintenance`, Client finishes active requests and disconnects.\n",
+  "layout": "quantumide-ultra-link",
+  "theme": {
+    "mode": "dark",
+    "accent": "#49d6c8",
+    "css": "design-system.css"
+  }
+}

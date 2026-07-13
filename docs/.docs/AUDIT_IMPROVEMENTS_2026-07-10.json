@@ -1,0 +1,14 @@
+{
+  "product": "MCPSOIDS",
+  "title": "Audit Improvements 2026 07 10",
+  "group": "Project",
+  "path": ".docs/AUDIT_IMPROVEMENTS_2026-07-10.md",
+  "lead": "Product: MCPSOIDS",
+  "content_markdown": "        # Audit & Improvements \u2014 2026-07-10\n\n        Product: **MCPSOIDS**\n\n        ## Audit findings addressed\n        - High: no package.json at repo root; bun install failed unless cd into mcp_server_ref\n- High: nested package without workspace root\n\n        ## Improvements applied\n        - Added root package.json workspace over mcp_server_ref\n- Added bunfig.toml, INSTALL.md, root scripts for build/start\n\n        ## Install verification\n        - JS/TS packages: run `bun install` from the directory containing `package.json` (repo root for workspace packages).\n        - Python packages: use venv + pip (`INSTALL.md`).\n\n        ## Related\n        - [How to Use](./how-to-use.md)\n        - [Security](./security.md)\n        - [ADR-0003 Package Manager](./adr-0003-package-manager-bun.md)\n",
+  "layout": "quantumide-ultra-link",
+  "theme": {
+    "mode": "dark",
+    "accent": "#49d6c8",
+    "css": "design-system.css"
+  }
+}

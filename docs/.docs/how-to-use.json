@@ -1,0 +1,14 @@
+{
+  "product": "MCPSOIDS",
+  "title": "How To Use",
+  "group": "Guides",
+  "path": ".docs/how-to-use.md",
+  "lead": "MCPSOIDS is an MCP server with an operator control center and Roots security laboratory.",
+  "content_markdown": "# How to Use MCPSOIDS\n\nMCPSOIDS is an MCP server with an operator control center and Roots security laboratory.\n\n## 1) Install\n\n```bash\nbun install\nbun run build\n```\n\n## 2) Start\n\n```bash\nexport MCP_AUTH_TOKEN=\"change-me-strong-token\"\nbun run start\n```\n\nOpen the server origin for the control center shell.\n\n## 3) Operator workflow\n1. Confirm health/heartbeat\n2. Browse capability catalog\n3. Use Roots lab (`fs/ls`, `fs/read_file`) to verify path bounds\n4. Keep auth tokens in environment variables only\n\n## 4) Production checklist\n- Set `MCP_AUTH_TOKEN`\n- Restrict CORS origin\n- Enable filesystem tools only when needed\n- Terminate TLS at your reverse proxy\n\n## Related\n- [INSTALL.md](../../INSTALL.md)\n- [Architecture](./architecture.md)\n- [Security](./security.md)\n",
+  "layout": "quantumide-ultra-link",
+  "theme": {
+    "mode": "dark",
+    "accent": "#49d6c8",
+    "css": "design-system.css"
+  }
+}

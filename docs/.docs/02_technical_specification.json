@@ -1,0 +1,14 @@
+{
+  "product": "MCPSOIDS",
+  "title": "02 Technical Specification",
+  "group": "Project",
+  "path": ".docs/02_technical_specification.md",
+  "lead": "   Latency: Protocol overhead must be < 20ms per roundtrip (excluding network).",
+  "content_markdown": "# Technical Specification & Tech Stack\n\n## 1. Technology Stack Justification\n\n| Component | Choice | Why This? | Risk/Mitigation |\n| :--- | :--- | :--- | :--- |\n| **Protocol** | JSON-RPC 2.0 | Standard, simple, language-agnostic | Verbose: Use compression (gzip) |\n| **Transport** | Streamable HTTP | Firewalls love HTTP; handles long-lived streams | Browser support: Use Polyfills |\n| **SDK Language** | TypeScript & Python | Covers 95% of AI/Web Dev ecosystem | C#/Java Laggards: Community wrappers |\n| **Auth** | OAuth 2.0 | Enterprise requirement for standard auth flows | Complexity: Provide helper libs |\n\n## 2. Non-Functional Requirements (NFRs)\n\n### Performance\n*   **Latency**: Protocol overhead must be **< 20ms** per roundtrip (excluding network).\n*   **Throughput**: Must support sending **1MB+** binary blobs (images/logs) via Resource templates without blocking the control channel.\n\n### Security\n*   **Isolation**: Servers must run in sandboxed environments (Docker/Wasm) in production.\n*   **Privacy**: No data leaves the defined \"Roots\" without explicit user consent.\n\n### Reliability\n*   **Graceful Degradation**: If a Server crashes, the Client must not hang. It should remove the tools from the context and notify the user.\n*   **Version Negotiation**: Client and Server must handshake capabilities (e.g., \"I support Sampling\") on connect.\n\n## 3. Schema Definitions\nAll tools must be defined using **JSON Schema Draft 2020-12**.\n*   *Requirement*: Descriptions must be optimized for LLM semantic understanding, not just human readability.\n\n## 4. Automated Compliance & Health\n\n### A. The Health Check Protocol\nEvery MCP Server MUST implement `/.well-known/mcp-health`. This is not for humans; it is for the \"Janitor Agent\".\n\n```json\n// GET /.well-known/mcp-health\n{\n  \"status\": \"green\", // or \"yellow\", \"red\"\n  \"metrics\": {\n    \"active_connections\": 12,\n    \"memory_usage_mb\": 45.2,\n    \"error_rate_1m\": 0.01\n  },\n  \"self_heal_hint\": \"restart_recommended\" // Optional hint for the orchestrator\n}\n```\n\n### B. Machine-Readable NFRs (The \"Budget\")\nCI pipelines must validate against this `nfr_budget.json`:\n\n```json\n{\n  \"$schema\": \"https://mcp.io/schemas/nfr-budget.json\",\n  \"limits\": {\n    \"cold_start_ms\": 500,\n    \"max_memory_mb\": 256,\n    \"image_size_mb\": 50\n  },\n  \"required_endpoints\": [\"/_health\", \"/_metrics\"]\n}\n```\n",
+  "layout": "quantumide-ultra-link",
+  "theme": {
+    "mode": "dark",
+    "accent": "#49d6c8",
+    "css": "design-system.css"
+  }
+}

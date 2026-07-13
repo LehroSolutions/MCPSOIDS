@@ -14,7 +14,7 @@ This is the core server for **MCPSOIDS**, the "Gold Standard" reference implemen
 ## How to Run
 ```bash
 # Install
-npm install
+bun install
 
 # Start Server
 npm start
@@ -39,7 +39,7 @@ Environment configuration (optional):
 ## How to Verify (Compliance Agent)
 Run the automated inspector to certify the server:
 ```bash
-npm run inspector
+bun run inspector
 ```
 Expected output:
 > ✨ ACTIVE ROBUSTNESS CERTIFIED ✨
@@ -49,3 +49,20 @@ Expected output:
 *   `src/features`: Roots security & Health monitoring.
 *   `src/transport`: Express HTTP server.
 *   `scripts/inspector.ts`: The Client Simulator / Compliance Agent.
+
+## Package manager (Bun)
+
+This package is **Bun-first**.
+
+```bash
+bun install
+bun run dev    # if defined
+bun run build  # if defined
+bun test       # or: bun run test
+```
+
+- Lockfile target: `bun.lock` (generate locally with `bun install`)
+- `packageManager` field pins Bun via Corepack-compatible tooling ecosystems
+- Node remains a compatibility runtime floor; prefer Bun for install/run/test
+
+See docs for the package-manager decision: search for `ADR-0003` in `docs/.docs/` when present.

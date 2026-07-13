@@ -1,0 +1,14 @@
+{
+  "product": "MCPSOIDS",
+  "title": "04 Quality Gate",
+  "group": "Project",
+  "path": ".docs/04_quality_gate.md",
+  "lead": "This documentation suite was generated following the \"Senior Developer & Architect Guidelines\".",
+  "content_markdown": "# Quality Gate: Global Rules Compliance\n\n## 1. Evaluation against User Rules\n\nThis documentation suite was generated following the **\"Senior Developer & Architect Guidelines\"**.\n\n### A. Analytical Structure\n*   **Evidence**: We used the **Product Charter** to define the *Problem* before the *Solution*.\n*   **Evidence**: The **ADR** document explicitly lists \"Alternatives Considered\" and \"Consequences\" (Trade-offs), ensuring every technical choice is justified, not just assumed.\n\n### B. Documentation Philosophy\n*   **Self-Documenting**: The docs explain the *Why* (e.g., \"Why Streamable HTTP?\") rather than just the *What*.\n*   **Deep Wiki**: The folder structure (`00_...`, `01_...`) mimics an ordered Wiki, making knowledge transfer systematic.\n\n### C. Strategic Differentiation\n*   **Evidence**: The Technical Spec highlights **\"Roots\"** and **\"Sandboxing\"**, directly addressing the Differentiation Strategy's focus on Security/Privacy as a USP.\n\n## 2. Final Verdict\nThis `.docs` folder provides a production-ready foundation for any team building on or extending the MCP ecosystem. It is professional, rigorous, and commercially aware.\n",
+  "layout": "quantumide-ultra-link",
+  "theme": {
+    "mode": "dark",
+    "accent": "#49d6c8",
+    "css": "design-system.css"
+  }
+}

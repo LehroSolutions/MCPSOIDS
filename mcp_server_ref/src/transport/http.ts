@@ -2,6 +2,8 @@ import express from 'express';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
 import path from 'path';
+import fs from 'fs/promises';
+import { timingSafeEqual } from 'crypto';
 import { logger } from '../logger';
 import { config } from '../config';
 import {
@@ -70,6 +72,7 @@ export class HttpTransport {
         });
 
         if (options.cors?.allowAll) {
+            if (config.NODE_ENV === 'production') throw new Error('Wildcard CORS is forbidden in production');
             this.app.use(cors());
         } else if (Array.isArray(options.cors?.origins) && options.cors!.origins!.length > 0) {
             this.app.use(cors({ origin: options.cors!.origins! }));
@@ -78,6 +81,12 @@ export class HttpTransport {
         // Body limit from env or default
         const limit = config.MCP_JSON_BODY_LIMIT;
         this.app.use(express.json({ limit }));
+
+        this.app.use((_req, res, next) => {
+            res.setHeader('X-Content-Type-Options', 'nosniff'); res.setHeader('X-Frame-Options', 'DENY');
+            res.setHeader('Referrer-Policy', 'no-referrer'); res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+            res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'"); next();
+        });
 
         // Structured access log
         this.app.use((req, res, next) => {
@@ -104,12 +113,18 @@ export class HttpTransport {
         });
         this.app.use('/mcp', limiter);
 
+        this.app.get('/', async (_req, res) => {
+            try { res.type('html').send(await fs.readFile(path.join(process.cwd(), 'public', 'index.html'), 'utf8')); }
+            catch { res.status(404).send('Control Center asset not found.'); }
+        });
+
         // Optional token auth
         const authToken = config.MCP_AUTH_TOKEN;
         if (authToken) {
             this.app.use((req, res, next) => {
                 const auth = req.header('authorization');
-                if (!auth || auth !== `Bearer ${authToken}`) {
+                const expected = Buffer.from(`Bearer ${authToken}`); const provided = Buffer.from(auth ?? '');
+                if (provided.length !== expected.length || !timingSafeEqual(provided, expected)) {
                     res.status(401).json(createErrorResponse(null, JsonRpcErrorCode.InvalidRequest, 'Unauthorized'));
                     return;
                 }
