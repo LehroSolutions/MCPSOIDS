@@ -28,6 +28,7 @@ unified_dev_rules.md
 # Research Data
 mcp_research_2025/
 mcpsoidsvideo/
+MCPSOIDVIDEO
 
 # Runtime Data
 mcp_server_ref/data/audit/
@@ -51,7 +52,3 @@ __pycache__/
 
 # Bun is the canonical package manager and lockfile authority
 package-lock.json
-
-#VIDEOS
-MCPSOIDVIDEO 
-mcpsoidsvideo
