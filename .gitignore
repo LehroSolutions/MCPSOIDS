@@ -1,54 +1,68 @@
+# Dependencies
 **/node_modules/
 
+# Build output
 **/dist/
 **/.next/
 **/out/
 **/build/
 
+# Coverage
 **/coverage/
 
+# Environment
 **/.env*
+!.env.example
 
+# Logs
 **/*.log
 
+# OS / editor
 **/.DS_Store
-
 **/.vscode/
 **/.idea/
+Thumbs.db
 
+# TypeScript
 **/*.tsbuildinfo
 
-# Internal Documentation & Rules (Excluded from Repo)
+# Internal AI-session scratch docs (kept on disk, not tracked)
+critique_and_pivot.md
 gemini-king-mode.md
 improved_dev_rules.md
-critique_and_pivot.md
-copilot-instructions.md
 unified_dev_rules.md
+next_steps_roadmap.md
+copilot-instructions.md
 
-# Research Data
+# Research & media dumps (kept on disk, not tracked)
 mcp_research_2025/
+mcp_data/
 mcpsoidsvideo/
-MCPSOIDVIDEO
+MCPSOIDVIDEO/
 
-# Runtime Data
+# Runtime data
 mcp_server_ref/data/audit/
-mcp_data/audit/
 .mcpsoids-private/
 
-# Generated Test Artifacts
+# Generated test artifacts
 **/playwright-report/
 **/test-results/
 
 # PRO/private docs should not publish from the OSS repo.
 .docs/PRO_IMPLEMENTATION.md
 
-# System Artifacts
+# System artifacts
 .agent/
 .gemini/
-.env.*
-!.env.example
 .venv/
 __pycache__/
+*.egg-info/
+.pytest_cache/
+.pytest-cache-files-*
+.pytest-tmp*
 
 # Bun is the canonical package manager and lockfile authority
 package-lock.json
+pnpm-lock.yaml
+yarn.lock
+bun.lockb
