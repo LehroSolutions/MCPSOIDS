@@ -20,7 +20,8 @@
     "docs:build": "node scripts/docs.mjs build",
     "docs:check": "node scripts/docs.mjs check",
     "format": "cd mcp_server_ref && bun run format",
-    "format:check": "cd mcp_server_ref && bun run format:check"
+    "format:check": "cd mcp_server_ref && bun run format:check",
+    "verify": "cd mcp_server_ref && bun run lint && bun run format:check && bun run build"
   },
   "workspaces": [
     "mcp_server_ref"
