@@ -1,9 +1,17 @@
 import { z } from 'zod';
 
+export const DEBUG_STRESS_INTENSITY_MAX = 256;
+export const DEBUG_STRESS_DURATION_MIN_MS = 100;
+export const DEBUG_STRESS_DURATION_MAX_MS = 60000;
+
+// Longest uninterrupted synchronous slice of cpu mode before yielding. Kept short
+// so timers, transport requests and /metrics stay serviced during a long burn.
+const CPU_SLICE_MS = 8;
+
 export const DebugStressToolSchema = z.object({
   mode: z.enum(['memory', 'cpu', 'latency']),
-  duration_ms: z.number().min(100).max(60000),
-  intensity: z.number().min(1).max(1000).optional().default(10),
+  duration_ms: z.number().min(DEBUG_STRESS_DURATION_MIN_MS).max(DEBUG_STRESS_DURATION_MAX_MS),
+  intensity: z.number().min(1).max(DEBUG_STRESS_INTENSITY_MAX).optional().default(10),
 });
 
 export type DebugStressToolParams = z.infer<typeof DebugStressToolSchema>;
@@ -33,7 +41,11 @@ export async function handleDebugStress(params: any) {
   if (mode === 'cpu') {
     const start = Date.now();
     while (Date.now() - start < duration_ms) {
-      Math.random() * Math.random();
+      const sliceEnd = Date.now() + CPU_SLICE_MS;
+      do {
+        Math.random() * Math.random();
+      } while (Date.now() < sliceEnd);
+      await new Promise((resolve) => setImmediate(resolve));
     }
     return `Burned CPU for ${duration_ms}ms`;
   }
@@ -53,8 +65,17 @@ export const DEBUG_STRESS_TOOL_DEFINITION = {
     type: 'object',
     properties: {
       mode: { type: 'string', enum: ['memory', 'cpu', 'latency'] },
-      duration_ms: { type: 'number' },
-      intensity: { type: 'number', description: 'MB for memory, or iterations for CPU' },
+      duration_ms: {
+        type: 'number',
+        minimum: DEBUG_STRESS_DURATION_MIN_MS,
+        maximum: DEBUG_STRESS_DURATION_MAX_MS,
+      },
+      intensity: {
+        type: 'number',
+        description: 'MB for memory, or iterations for CPU',
+        minimum: 1,
+        maximum: DEBUG_STRESS_INTENSITY_MAX,
+      },
     },
     required: ['mode', 'duration_ms'],
   },

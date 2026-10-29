@@ -96,7 +96,7 @@ async function runInspection() {
     agentId: 'inspector',
   });
 
-  if (echoRes.result !== 'verify_me' && echoRes.result?.result !== 'verify_me') {
+  if (echoRes.result?.content?.[0]?.text !== 'verify_me') {
     console.error(echoRes);
     throw new Error('Echo check failed');
   }
@@ -119,7 +119,7 @@ async function runInspection() {
     sessionId: 'inspector-session',
     agentId: 'inspector',
   });
-  const entries = lsRes?.result?.entries ?? lsRes?.result?.result?.entries;
+  const entries = JSON.parse(lsRes.result.content[0].text).entries;
   if (!Array.isArray(entries)) {
     console.error(lsRes);
     throw new Error('fs/ls returned invalid shape');
@@ -131,7 +131,7 @@ async function runInspection() {
     sessionId: 'inspector-session',
     agentId: 'inspector',
   });
-  const content = readRes?.result?.content ?? readRes?.result?.result?.content;
+  const content = JSON.parse(readRes.result.content[0].text).content;
   if (typeof content !== 'string' || !content.includes('"name"')) {
     console.error(readRes);
     throw new Error('fs/read_file failed to read package.json');

@@ -6,7 +6,7 @@ Operating contract for AI coding agents, with human-in-the-loop checkpoints.
 
 MCPSOIDS is an "Active Robustness" Model Context Protocol implementation:
 a hardened Node/Bun MCP server (`mcp_server_ref/`, TypeScript) with a
-glassmorphic Control Center (`mcp-control-center/`, git submodule).
+glassmorphic Control Center (`mcp-control-center/`, vendored source).
 Monorepo root is a Bun workspace. License: Apache-2.0.
 
 ## Command Reference
@@ -27,16 +27,18 @@ All root scripts delegate into `mcp_server_ref/`:
 
 ## Verify Contract
 
-`bun run verify` = lint + format:check + tsc build. Must pass before you
-report success. There is no test suite in `mcp_server_ref` yet — the
-`inspector` and `stress` scripts are the closest smoke checks; do not claim
-"tests pass".
+`bun run verify` covers server lint/format/build/tests, UI lint/build/tests,
+and documentation checks. It must pass before reporting success. The server
+tests include real HTTP auth, initialization, tool calls, filesystem denial,
+and audit persistence. Run the production UI E2E suite after building both
+components; see `PRODUCTION.md` for isolated ports and setup.
 
 ## Codebase Map
 
 - `mcp_server_ref/` — the MCP server: `src/cli.ts` entry, tool handlers,
   transport (`src/`), `scripts/inspector.ts`, `scripts/stress_test.ts`
-- `mcp-control-center/` — Control Center UI (git submodule; its own repo)
+- `mcp-control-center/` — Control Center UI; Next.js source vendored into
+  this repository and tracked directly (not a submodule, no separate repo)
 - `mcp_server_ref/` docs + `docs/` — protocol documentation
 - `mcp_data/`, `mcp_research_2025/` — research notes
 
@@ -52,12 +54,16 @@ report success. There is no test suite in `mcp_server_ref` yet — the
 Ask the human before:
 - Enabling or widening FS access or CORS origins (`start` flags).
 - Changing the MCP tool surface (add/remove/rename tools or schemas).
-- Updating the `mcp-control-center` submodule pointer.
+- Bulk rewrites or deletions inside `mcp-control-center/` (vendored source is
+  tracked here and has no upstream repo to reconcile against).
 
 ## Danger Zones
 
 - The server exposes filesystem operations when started with `--enable-fs` —
   never run it with FS access against directories with sensitive data.
 - Never commit `.env` files; `.env.example` is the template.
-- `mcp-control-center` is a submodule — do not commit changes from the
-  parent repo that belong in the submodule's own repo.
+- `mcp-control-center` is vendored source tracked by this repo, not a
+  submodule — edit and commit it here like any other directory. Its
+  pre-vendoring history is archived at
+  `../.archive/mcp-control-center-history.bundle`; recover it with
+  `git clone ../.archive/mcp-control-center-history.bundle mcp-control-center`.

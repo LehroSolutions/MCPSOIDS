@@ -2,7 +2,7 @@
   "name": "mcpsoids",
   "private": true,
   "version": "1.0.0",
-  "description": "MCPSOIDS monorepo root \u2014 Bun workspace for mcp_server_ref",
+  "description": "MCPSOIDS monorepo root â€” Bun workspace for mcp_server_ref",
   "license": "Apache-2.0",
   "author": "Lehro Solutions",
   "packageManager": "bun@1.3.14",
@@ -15,15 +15,28 @@
     "start": "cd mcp_server_ref && bun run start",
     "build": "cd mcp_server_ref && bun run build",
     "lint": "cd mcp_server_ref && bun run lint",
+    "test": "cd mcp_server_ref && bun run test",
+    "verify:server": "cd mcp_server_ref && bun run lint && bun run format:check && bun run build && bun run test",
+    "verify:ui": "bun run --cwd mcp-control-center lint && bun run --cwd mcp-control-center build && bun run --cwd mcp-control-center test",
     "install:js": "bun install",
     "package:manager": "bun --version",
     "docs:build": "node scripts/docs.mjs build",
     "docs:check": "node scripts/docs.mjs check",
     "format": "cd mcp_server_ref && bun run format",
     "format:check": "cd mcp_server_ref && bun run format:check",
-    "verify": "cd mcp_server_ref && bun run lint && bun run format:check && bun run build"
+    "verify": "bun run verify:server && bun run verify:ui && bun run docs:check"
   },
   "workspaces": [
     "mcp_server_ref"
-  ]
+  ],
+  "overrides": {
+    "proxy-addr": "2.0.8",
+    "qs": "6.17.1",
+    "fast-copy": "4.3.1",
+    "ip-address": "10.7.5",
+    "body-parser": "1.20.9",
+    "js-yaml": "4.3.2",
+    "brace-expansion": "2.1.7",
+    "minimatch": "3.1.5"
+  }
 }

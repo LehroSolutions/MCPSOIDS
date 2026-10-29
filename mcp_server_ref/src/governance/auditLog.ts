@@ -1,6 +1,8 @@
 import crypto from 'crypto';
 import fs from 'fs/promises';
+import type { FileHandle } from 'fs/promises';
 import path from 'path';
+import { createInterface } from 'readline';
 import { PolicyDecision } from './policyEngine';
 
 export type AuditOutcome = 'allowed' | 'denied' | 'error';
@@ -38,6 +40,8 @@ export type ChainVerificationResult = {
 };
 
 const GENESIS_HASH = 'GENESIS';
+
+const TAIL_READ_BYTES = 64 * 1024;
 
 const SENSITIVE_PATTERNS: Array<{ flag: string; pattern: RegExp }> = [
   { flag: 'contains_email', pattern: /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/i },
@@ -98,7 +102,9 @@ function stripUndefined<T>(value: T): T {
   }
 
   if (value && typeof value === 'object') {
-    const cleaned: Record<string, unknown> = {};
+    // Null prototype: JSON-derived `__proto__` keys then become plain own
+    // properties instead of invoking the prototype setter.
+    const cleaned: Record<string, unknown> = Object.create(null);
     for (const [key, item] of Object.entries(value as Record<string, unknown>)) {
       if (item !== undefined) {
         cleaned[key] = stripUndefined(item);
@@ -119,6 +125,8 @@ function redactEntryForHash(entry: AuditEntry): Omit<AuditEntry, 'entryHash'> {
 export class AuditLog {
   private appendQueue: Promise<void> = Promise.resolve();
 
+  private lastEntryHash: string | null = null;
+
   constructor(private readonly filePath: string) {}
 
   public getPath(): string {
@@ -128,7 +136,7 @@ export class AuditLog {
   public async append(draft: AuditEntryDraft): Promise<AuditEntry> {
     let entry!: AuditEntry;
 
-    this.appendQueue = this.appendQueue.then(async () => {
+    const operation = this.appendQueue.then(async () => {
       await fs.mkdir(path.dirname(this.filePath), { recursive: true });
 
       const prevEntryHash = await this.getLastEntryHash();
@@ -140,72 +148,124 @@ export class AuditLog {
       });
       const entryHash = computeEntryHash(entryWithoutHash);
       entry = { ...entryWithoutHash, entryHash };
-      await fs.appendFile(this.filePath, `${JSON.stringify(entry)}\n`, 'utf8');
+      await fs.appendFile(this.filePath, `${JSON.stringify(entry)}\n`, {
+        encoding: 'utf8',
+        flush: true,
+      });
+      this.lastEntryHash = entryHash;
     });
 
-    await this.appendQueue;
+    this.appendQueue = operation.catch(() => {
+      this.lastEntryHash = null;
+    });
+    await operation;
     return entry;
   }
 
   public async readRecent(limit = 100): Promise<AuditEntry[]> {
-    const entries = await this.readAll();
-    return entries.slice(Math.max(entries.length - limit, 0)).reverse();
+    if (!Number.isSafeInteger(limit) || limit < 1)
+      throw new Error('Audit limit must be a positive integer');
+    let handle: FileHandle;
+    try {
+      handle = await fs.open(this.filePath, 'r');
+    } catch (err) {
+      if ((err as NodeJS.ErrnoException).code === 'ENOENT') return [];
+      throw err;
+    }
+    try {
+      let position = (await handle.stat()).size;
+      let pending: Buffer = Buffer.alloc(0);
+      const entries: AuditEntry[] = [];
+      while (position > 0 && entries.length < limit) {
+        const length = Math.min(position, TAIL_READ_BYTES);
+        position -= length;
+        const chunk = Buffer.alloc(length);
+        const { bytesRead } = await handle.read(chunk, 0, length, position);
+        if (bytesRead !== length) throw new Error('Audit log changed during read');
+        const data = Buffer.concat([chunk, pending]);
+        let end = data.length;
+        while (end > 0 && entries.length < limit) {
+          const newline = data.lastIndexOf(10, end - 1);
+          if (newline < 0) break;
+          const line = data.subarray(newline + 1, end).toString('utf8');
+          if (line.trim()) entries.push(JSON.parse(line) as AuditEntry);
+          end = newline;
+        }
+        pending = data.subarray(0, end);
+        if (position === 0 && pending.length > 0 && entries.length < limit) {
+          const line = pending.toString('utf8');
+          if (line.trim()) entries.push(JSON.parse(line) as AuditEntry);
+        }
+      }
+      return entries;
+    } finally {
+      await handle.close();
+    }
   }
 
   public async verifyIntegrity(): Promise<ChainVerificationResult> {
-    const entries = await this.readAll();
-    let previous = GENESIS_HASH;
-
-    for (let i = 0; i < entries.length; i++) {
-      const entry = entries[i];
-
-      if (entry.prevEntryHash !== previous) {
-        return {
-          valid: false,
-          checkedEntries: entries.length,
-          tamperDetectedAt: i,
-          suspectEntryId: entry.id,
-          reason: 'Previous hash mismatch',
-        };
-      }
-
-      const expectedHash = computeEntryHash(redactEntryForHash(entry));
-      if (entry.entryHash !== expectedHash) {
-        return {
-          valid: false,
-          checkedEntries: entries.length,
-          tamperDetectedAt: i,
-          suspectEntryId: entry.id,
-          reason: 'Entry hash mismatch',
-        };
-      }
-
-      previous = entry.entryHash;
+    let handle: FileHandle;
+    try {
+      handle = await fs.open(this.filePath, 'r');
+    } catch (err) {
+      if ((err as NodeJS.ErrnoException).code === 'ENOENT')
+        return { valid: true, checkedEntries: 0 };
+      throw err;
     }
+    const reader = createInterface({
+      input: handle.createReadStream({ encoding: 'utf8', autoClose: false }),
+      crlfDelay: Infinity,
+    });
+    let previous = GENESIS_HASH;
+    let checkedEntries = 0;
+    try {
+      for await (const line of reader) {
+        if (!line.trim()) continue;
+        const entry = JSON.parse(line) as AuditEntry;
+        const i = checkedEntries++;
 
-    return {
-      valid: true,
-      checkedEntries: entries.length,
-    };
+        if (entry.prevEntryHash !== previous) {
+          return {
+            valid: false,
+            checkedEntries,
+            tamperDetectedAt: i,
+            suspectEntryId: entry.id,
+            reason: 'Previous hash mismatch',
+          };
+        }
+
+        const expectedHash = computeEntryHash(redactEntryForHash(entry));
+        if (entry.entryHash !== expectedHash) {
+          return {
+            valid: false,
+            checkedEntries,
+            tamperDetectedAt: i,
+            suspectEntryId: entry.id,
+            reason: 'Entry hash mismatch',
+          };
+        }
+
+        previous = entry.entryHash;
+      }
+
+      return {
+        valid: true,
+        checkedEntries,
+      };
+    } finally {
+      reader.close();
+      await handle.close();
+    }
   }
 
   private async getLastEntryHash(): Promise<string> {
-    const entries = await this.readAll();
-    return entries.at(-1)?.entryHash ?? GENESIS_HASH;
+    if (this.lastEntryHash === null) {
+      this.lastEntryHash = await this.readLastEntryHash();
+    }
+    return this.lastEntryHash;
   }
 
-  private async readAll(): Promise<AuditEntry[]> {
-    try {
-      const content = await fs.readFile(this.filePath, 'utf8');
-      return content
-        .split(/\r?\n/)
-        .filter(Boolean)
-        .map((line) => JSON.parse(line) as AuditEntry);
-    } catch (err) {
-      if ((err as NodeJS.ErrnoException).code === 'ENOENT') {
-        return [];
-      }
-      throw err;
-    }
+  private async readLastEntryHash(): Promise<string> {
+    return (await this.readRecent(1))[0]?.entryHash ?? GENESIS_HASH;
   }
 }

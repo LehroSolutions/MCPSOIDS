@@ -93,7 +93,7 @@ function parseArgs(argv: string[]): CliOptions {
     throw new Error(`Unknown argument: ${arg}`);
   }
 
-  if (!Number.isFinite(opts.port) || opts.port <= 0) {
+  if (!Number.isInteger(opts.port) || opts.port <= 0 || opts.port > 65535) {
     throw new Error(`Invalid --port: ${opts.port}`);
   }
 

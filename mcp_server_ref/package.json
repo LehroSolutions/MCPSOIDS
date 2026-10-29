@@ -16,12 +16,13 @@
     "start": "bun src/cli.ts --enable-fs --cors-origin http://localhost:3001",
     "build": "tsc",
     "lint": "eslint src/**/*.ts",
+    "test": "bun test test/",
     "inspector": "bun scripts/inspector.ts",
     "stress": "bun scripts/stress_test.ts",
     "prepublishOnly": "bun run build",
     "package:manager": "bun --version",
-    "format": "prettier --write \"src/**/*.ts\" \"scripts/**/*.ts\" \"*.{json,md,yml,yaml}\"",
-    "format:check": "prettier --check \"src/**/*.ts\" \"scripts/**/*.ts\" \"*.{json,md,yml,yaml}\""
+    "format": "prettier --write \"src/**/*.ts\" \"scripts/**/*.ts\" \"test/**/*.ts\" \"*.{json,md,yml,yaml}\"",
+    "format:check": "prettier --check \"src/**/*.ts\" \"scripts/**/*.ts\" \"test/**/*.ts\" \"*.{json,md,yml,yaml}\""
   },
   "keywords": [
     "mcp",
@@ -36,8 +37,8 @@
     "express": "4.22.2",
     "express-rate-limit": "8.6.2",
     "pino": "10.3.1",
-    "uuid": "9.0.1",
-    "zod": "3.25.76"
+    "uuid": "11.1.1",
+    "zod": "4.6.7"
   },
   "devDependencies": {
     "@types/cors": "2.8.19",

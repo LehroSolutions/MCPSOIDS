@@ -3,7 +3,7 @@ import path from 'path';
 import { HttpTransport } from './transport/http';
 import { HealthMonitor } from './features/health';
 import { SecurityManager } from './features/security';
-import { config } from './config';
+import { config, resolveDebugToolsEnabled } from './config';
 
 export type McpServerOptions = {
   host?: string;
@@ -21,6 +21,14 @@ export type McpServerOptions = {
 };
 
 export function startMcpServer(options: McpServerOptions) {
+  const host = options.host ?? config.HOST;
+  const port = options.port ?? config.PORT;
+  if (!['127.0.0.1', '::1', 'localhost'].includes(host) && !config.MCP_AUTH_TOKEN?.trim()) {
+    throw new Error('MCP_AUTH_TOKEN is required when binding outside loopback');
+  }
+  if (!Number.isInteger(port) || port < 0 || port > 65535) {
+    throw new Error('Port must be an integer between 0 and 65535');
+  }
   const healthMonitor = new HealthMonitor();
 
   const envRoots = config.MCP_ROOTS ? config.MCP_ROOTS.split(path.delimiter).filter(Boolean) : [];
@@ -31,7 +39,7 @@ export function startMcpServer(options: McpServerOptions) {
 
   const transport = new HttpTransport(healthMonitor, securityManager, {
     enableFsTools,
-    enableDebugTools: config.NODE_ENV === 'development' || config.MCP_ENABLE_DEBUG_TOOLS,
+    enableDebugTools: resolveDebugToolsEnabled(config),
     cors:
       options.cors ??
       (config.MCP_ALLOWED_ORIGIN ? { origins: [config.MCP_ALLOWED_ORIGIN] } : undefined),
@@ -39,8 +47,6 @@ export function startMcpServer(options: McpServerOptions) {
     toolTimeoutMs: options.toolTimeoutMs ?? config.MCP_TOOL_TIMEOUT_MS,
   });
 
-  const host = options.host ?? config.HOST;
-  const port = options.port ?? config.PORT;
   const server = transport.start(port, host);
 
   if (options.janitorExitOnRed) {

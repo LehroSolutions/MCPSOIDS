@@ -12,25 +12,39 @@ export type BusinsistoidToolParams = z.infer<typeof BusinsistoidToolSchema>;
 // Default to port 4000 as per index.ts
 const BUSINSISTOID_URL = process.env.BUSINSISTOID_URL || 'http://localhost:4000/api';
 
-// Helper to authenticate if no token provided (Quick & Dirty for MVP)
+// Auto-auth never carries committed defaults: an absent credential is an
+// operator error, not a reason to fall back to a shared admin account.
 async function getAdminToken(): Promise<string> {
-  const credentials = {
-    email: 'admin@example.com',
-    password: 'password123',
-  };
-  try {
-    const response = await fetch(`${BUSINSISTOID_URL}/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(credentials),
-    });
-    if (!response.ok) throw new Error('Auth failed');
-    const data = (await response.json()) as any;
-    return data.token; // Adjust based on actual response shape
-  } catch (e) {
-    console.error('Failed to auto-login to Businsistoid', e);
-    return '';
+  const email = process.env.BUSINSISTOID_ADMIN_EMAIL;
+  const password = process.env.BUSINSISTOID_ADMIN_PASSWORD;
+
+  if (!email || !password) {
+    const missing = [
+      !email && 'BUSINSISTOID_ADMIN_EMAIL',
+      !password && 'BUSINSISTOID_ADMIN_PASSWORD',
+    ]
+      .filter(Boolean)
+      .join(' and ');
+    throw new Error(
+      `Businsistoid auto-auth is unconfigured: set ${missing}, or supply a token on the tool call to skip auto-auth.`,
+    );
   }
+
+  const response = await fetch(`${BUSINSISTOID_URL}/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Businsistoid auth failed: ${response.status} ${response.statusText}`);
+  }
+
+  const data = (await response.json()) as { token?: string };
+  if (!data.token) {
+    throw new Error('Businsistoid auth response contained no token');
+  }
+  return data.token;
 }
 
 export async function handleBusinsistoid(params: any): Promise<string> {

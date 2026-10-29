@@ -69,6 +69,16 @@ export class HttpTransport {
     this.enableDebugTools = options.enableDebugTools ?? false;
     this.toolTimeoutMs = options.toolTimeoutMs ?? DEFAULT_TOOL_TIMEOUT_MS;
     this.maxActiveRequests = options.maxActiveRequests ?? DEFAULT_MAX_ACTIVE_REQUESTS;
+    if (
+      !Number.isInteger(this.toolTimeoutMs) ||
+      this.toolTimeoutMs < 1 ||
+      this.toolTimeoutMs > 300000 ||
+      !Number.isInteger(this.maxActiveRequests) ||
+      this.maxActiveRequests < 1 ||
+      this.maxActiveRequests > 10000
+    ) {
+      throw new Error('Invalid tool timeout or active request limit');
+    }
     this.auditLog = new AuditLog(
       config.MCP_AUDIT_LOG_PATH
         ? path.resolve(config.MCP_AUDIT_LOG_PATH)
@@ -87,10 +97,6 @@ export class HttpTransport {
     } else if (Array.isArray(options.cors?.origins) && options.cors!.origins!.length > 0) {
       this.app.use(cors({ origin: options.cors!.origins! }));
     }
-
-    // Body limit from env or default
-    const limit = config.MCP_JSON_BODY_LIMIT;
-    this.app.use(express.json({ limit }));
 
     this.app.use((_req, res, next) => {
       res.setHeader('X-Content-Type-Options', 'nosniff');
@@ -129,6 +135,18 @@ export class HttpTransport {
     });
     this.app.use('/mcp', limiter);
 
+    // Integrity scans the audit history; metrics and discovery read health state,
+    // so these routes get a tighter request budget than JSON-RPC.
+    const readLimiter = rateLimit({
+      windowMs: 15 * 60 * 1000,
+      max: 120,
+      standardHeaders: true,
+      legacyHeaders: false,
+    });
+    this.app.use('/audit', readLimiter);
+    this.app.use('/metrics', readLimiter);
+    this.app.use('/.well-known', readLimiter);
+
     this.app.get('/', async (_req, res) => {
       try {
         res
@@ -156,12 +174,16 @@ export class HttpTransport {
       });
     }
 
+    this.app.use(express.json({ limit: config.MCP_JSON_BODY_LIMIT }));
+
     // JSON body parse errors
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     this.app.use(
       (err: any, _req: express.Request, res: express.Response, next: express.NextFunction) => {
         if (err instanceof SyntaxError) {
-          res.json(createErrorResponse(null, JsonRpcErrorCode.ParseError, 'Parse error'));
+          res
+            .status(400)
+            .json(createErrorResponse(null, JsonRpcErrorCode.ParseError, 'Parse error'));
           return;
         }
         if (err?.type === 'entity.too.large' || err?.status === 413) {
@@ -204,6 +226,23 @@ export class HttpTransport {
         },
       });
     });
+
+    // Terminating error handler. Express's default handler serialises the full
+    // stack trace and absolute server paths whenever NODE_ENV is not
+    // "production", and NODE_ENV defaults to "development" in this server.
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    this.app.use(
+      (err: any, _req: express.Request, res: express.Response, next: express.NextFunction) => {
+        this.logger.error({ event: 'http_unhandled_error', err });
+        if (res.headersSent) {
+          next(err);
+          return;
+        }
+        res
+          .status(500)
+          .json(createErrorResponse(null, JsonRpcErrorCode.InternalError, 'Internal Server Error'));
+      },
+    );
   }
 
   private handleMcpRequest = async (req: express.Request, res: express.Response) => {
@@ -230,12 +269,48 @@ export class HttpTransport {
 
       const rpcReq = parseResult.data;
 
+      if (rpcReq.id === undefined) {
+        res.status(202).end();
+        return;
+      }
+
       // Dispatcher Logic
       let result;
       try {
         switch (rpcReq.method) {
+          case 'initialize':
+            if (
+              typeof rpcReq.params?.protocolVersion !== 'string' ||
+              typeof rpcReq.params?.clientInfo?.name !== 'string' ||
+              typeof rpcReq.params?.clientInfo?.version !== 'string'
+            ) {
+              throw {
+                code: JsonRpcErrorCode.InvalidParams,
+                message: 'Invalid initialize parameters',
+              };
+            }
+            result = {
+              protocolVersion: '2025-03-26',
+              capabilities: { tools: {} },
+              serverInfo: { name: 'mcpsoids-server', version: '1.0.0' },
+            };
+            break;
+          case 'ping':
+            result = {};
+            break;
           case 'tools/call':
-            result = await this.dispatchToolCall(rpcReq.params, rpcReq.id ?? null);
+            {
+              const output = await this.dispatchToolCall(rpcReq.params, rpcReq.id ?? null);
+              result = {
+                content: [
+                  {
+                    type: 'text',
+                    text: typeof output === 'string' ? output : JSON.stringify(output),
+                  },
+                ],
+                isError: false,
+              };
+            }
             break;
           case 'tools/list':
             result = {

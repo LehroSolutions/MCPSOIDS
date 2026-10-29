@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 export const EchoToolSchema = z.object({
   message: z.string(),
-  delay_ms: z.number().optional().default(0),
+  delay_ms: z.number().max(60000).optional().default(0),
 });
 
 export type EchoToolParams = z.infer<typeof EchoToolSchema>;

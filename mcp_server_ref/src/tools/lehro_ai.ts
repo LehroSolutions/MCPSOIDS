@@ -4,7 +4,10 @@ export const LehroAiToolSchema = z
   .object({
     message: z.string().optional().describe('The chat message or query for the AI'),
     skill: z.string().optional().describe('Name of the skill to execute (e.g., "analytics_query")'),
-    skillParams: z.record(z.any()).optional().describe('Parameters for the skill execution'),
+    skillParams: z
+      .record(z.string(), z.any())
+      .optional()
+      .describe('Parameters for the skill execution'),
     model: z.string().optional().default('lehro-v1'),
   })
   .refine((data) => data.message || data.skill, {
